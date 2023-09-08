@@ -1,13 +1,18 @@
 #!/usr/bin/env bash
 
-CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+set -eu
+
+readonly CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly SCRITPS_DIR="${CURRENT_DIR}/scripts"
+
+source "${SCRITPS_DIR}/helpers.sh"
 
 placeholders=(
 	"\#{touchpad_battery}"
 )
 
 commands=(
-	"#($CURRENT_DIR/battery.sh)"
+	"#($SCRITPS_DIR/battery.sh)"
 )
 
 do_interpolation() {
@@ -16,23 +21,6 @@ do_interpolation() {
 		all_interpolated=${all_interpolated//${placeholders[$i]}/${commands[$i]}}
 	done
 	echo "$all_interpolated"
-}
-
-get_tmux_option() {
-	local option="$1"
-	local default_value="$2"
-	local option_value="$(tmux show-option -gqv "$option")"
-	if [ -z "$option_value" ]; then
-		echo "$default_value"
-	else
-		echo "$option_value"
-	fi
-}
-
-set_tmux_option() {
-	local option="$1"
-	local value="$2"
-	tmux set-option -gq "$option" "$value"
 }
 
 update_tmux_option() {
