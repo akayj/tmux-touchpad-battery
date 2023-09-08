@@ -4,7 +4,11 @@ set -eu
 
 function show_touchpad_battery() {
 	# 获取蓝牙触摸板的电量百分比
-	local battery_percent=$(ioreg -l | grep BatteryPercent | awk '{print $NF}')
+	local battery_percent=$(ioreg -l 2>/dev/null | grep BatteryPercent | awk '{print $NF}')
+
+	if [ -z "${battery_percent}" ]; then
+		return 1
+	fi
 
 	if ((battery_percent < 50)); then
 		if ((battery_percent <= 30)); then
