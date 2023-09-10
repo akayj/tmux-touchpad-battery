@@ -14,10 +14,9 @@ function show_touchpad_battery() {
 	# 获取蓝牙触摸板的电量百分比
 	local battery_percent=$(ioreg -l 2>/dev/null | grep BatteryPercent | awk '{print $NF}')
 
-	# if [ -z "${battery_percent}" ]; then
-	# 	return 1
-	# fi
-	battery_percent=89
+	if [ -z "${battery_percent}" ]; then
+		return 1
+	fi
 
 	if ((battery_percent < ${pb_no_show})); then
 		if ((battery_percent < 50)); then
