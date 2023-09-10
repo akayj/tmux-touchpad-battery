@@ -7,7 +7,7 @@ pb_suffix='%'
 
 pb_low_power_fg="red"
 pb_middle_power_fg="orange"
-pb_high_power_fg="blue"
+pb_high_power_fg="green"
 pb_no_show=100
 
 function show_touchpad_battery() {
