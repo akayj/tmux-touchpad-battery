@@ -17,3 +17,15 @@ set_tmux_option() {
   local value="$2"
   tmux set-option -gq "$option" "$value"
 }
+
+fcomp() {
+  awk -v n1="$1" -v n2="$2" 'BEGIN {if (n1<n2) exit 0; exit 1}'
+}
+
+# because bash does not support floating-point math
+# but awk does
+calc() {
+  local stdin;
+  read -d '' -u 0 stdin;
+  awk "BEGIN { print $stdin }";
+}
