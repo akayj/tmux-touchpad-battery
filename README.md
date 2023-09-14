@@ -1,8 +1,7 @@
-Tmux Trackpad plugin
-===================
+# Tmux plugin for magic trackpad battery(macOS only)
 
-# tmux plugin for magic trackpad battery(macOS only)
-
+![normal](/screenshots/normal.jpg)
+![charging](/screenshots/charging.jpg)
 
 Features
 --------
