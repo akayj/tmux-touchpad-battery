@@ -59,5 +59,4 @@ tmp/
 .env.*.local
 
 # Compiled binary (project specific)
-tmux-touchpad-battery
-cmd/tmux-touchpad-battery/tmux-touchpad-battery
+bin/
