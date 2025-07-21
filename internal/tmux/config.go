@@ -18,6 +18,8 @@ type Config struct {
 	MediumThreshold   int
 	NotShowThreshold  int
 	BlinkOnLowBattery bool
+	ChargingIcon      string
+	ShowChargingIcon  bool
 }
 
 // GetConfig 获取 tmux 配置
@@ -33,6 +35,8 @@ func GetConfig() *Config {
 		MediumThreshold:   getTmuxOptionInt("@tpb_medium_threshold", 80),
 		NotShowThreshold:  getTmuxOptionInt("@tpb_not_show_threshold", 100),
 		BlinkOnLowBattery: getTmuxOptionBool("@tpb_blink_on_low_battery", false),
+		ChargingIcon:      getTmuxOption("@tpb_charging_icon", "⚡"),
+		ShowChargingIcon:  getTmuxOptionBool("@tpb_show_charging_icon", true),
 	}
 }
 

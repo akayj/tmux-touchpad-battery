@@ -42,13 +42,20 @@ func (f *Formatter) FormatBattery(info *battery.BatteryInfo) string {
 		blinkAttr = ",blink"
 	}
 
+	// 添加充电图标
+	chargingIcon := ""
+	if info.IsCharging && f.config.ShowChargingIcon {
+		chargingIcon = f.config.ChargingIcon
+	}
+
 	// 格式化为 tmux 颜色格式
-	return fmt.Sprintf("#[fg=%s%s]%s%d%s",
+	return fmt.Sprintf("#[fg=%s%s]%s%d%s%s",
 		color,
 		blinkAttr,
 		f.config.PercentPrefix,
 		info.Percentage,
 		f.config.PercentSuffix,
+		chargingIcon,
 	)
 }
 
@@ -69,8 +76,8 @@ func (f *Formatter) FormatBatteryWithStyle(info *battery.BatteryInfo) string {
 		f.config.PercentSuffix,
 	)
 
-	if info.IsCharging {
-		text += " ⚡"
+	if info.IsCharging && f.config.ShowChargingIcon {
+		text += " " + f.config.ChargingIcon
 	}
 
 	return style.Render(text)
