@@ -25,7 +25,7 @@
 
 ### 模块依赖关系
 
-```
+```bash
 main.go (入口点)
     ↓
 display.Formatter (格式化层)
@@ -38,6 +38,7 @@ ui.Model (UI 层)
 ## 开发命令
 
 ### 构建和运行
+
 ```bash
 make build          # 构建二进制文件到 bin/tmux-touchpad-battery
 make install        # 安装到 /usr/local/bin (需要 sudo)
@@ -45,6 +46,7 @@ make clean          # 删除 bin/ 目录
 ```
 
 ### 测试和开发
+
 ```bash
 make test           # 使用 go test ./... 运行 Go 测试
 make fmt            # 使用 go fmt ./... 格式化代码
@@ -58,6 +60,7 @@ go test ./internal/display -v              # 测试显示格式化
 ```
 
 ### 应用模式
+
 ```bash
 make status         # 在终端中显示电池状态
 make ui             # 启动交互式 TUI
@@ -81,12 +84,15 @@ make dev            # 构建并运行状态检查
 ## 关键技术细节
 
 ### 电池检测
+
 使用 macOS 特定的 `ioreg -l` 命令解析系统注册表中的触摸板电池信息。搜索具有 "BatteryPercent" 和 "BatteryStatusFlags" 条目的设备，使用正则表达式模式。充电状态由 BatteryStatusFlags 值 "3" 确定。
 
 ### Tmux 集成
+
 执行 `tmux show-option -gqv` 读取用户配置，具有优雅的默认值回退机制。工具输出与 tmux 兼容的颜色代码用于状态栏集成。支持双输出格式：tmux 格式（带颜色代码）和终端格式（带 lipgloss 样式）。
 
 ### 错误处理
+
 - **静默失败** 用于 tmux 输出模式（无错误消息以避免破坏状态栏）
 - **详细错误报告** 用于 -status 和 -ui 模式
 - **优雅降级** 当 tmux 选项缺失或触摸板不可用时
