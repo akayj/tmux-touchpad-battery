@@ -79,7 +79,7 @@ func runUI() {
 
 func showBatteryStatus() {
 	config := tmux.GetConfig()
-	batteryFormatter := display.NewFormatter(config)
+	batteryFormatter := display.NewBatteryFormatter(config)
 	systemFormatter := display.NewSystemFormatter(config)
 
 	// 获取电池信息
@@ -99,19 +99,21 @@ func showBatteryStatus() {
 	if batteryInfo.Available {
 		fmt.Printf("电池电量: %d%%\n", batteryInfo.Percentage)
 		fmt.Printf("充电状态: %v\n", batteryInfo.IsCharging)
-		fmt.Printf("电池格式化输出: %s\n", batteryFormatter.FormatBatteryWithStyle(batteryInfo))
+		batteryFormatter.SetBatteryInfo(batteryInfo)
+		fmt.Printf("电池格式化输出: %s\n", batteryFormatter.FormatWithStyle())
 	}
 
 	if systemInfo.Available {
 		fmt.Printf("CPU 使用率: %.1f%%\n", systemInfo.CPUUsage)
 		fmt.Printf("GPU 使用率: %.1f%%\n", systemInfo.GPUUsage)
-		fmt.Printf("系统格式化输出: %s\n", systemFormatter.FormatSystemInfoWithStyle(systemInfo))
+		systemFormatter.SetSystemInfo(systemInfo)
+		fmt.Printf("系统格式化输出: %s\n", systemFormatter.FormatWithStyle())
 	}
 }
 
 func outputTmuxFormat() {
 	config := tmux.GetConfig()
-	batteryFormatter := display.NewFormatter(config)
+	batteryFormatter := display.NewBatteryFormatter(config)
 	systemFormatter := display.NewSystemFormatter(config)
 
 	// 获取电池信息
@@ -129,8 +131,10 @@ func outputTmuxFormat() {
 	}
 
 	// 格式化输出
-	batteryOutput := batteryFormatter.FormatBattery(batteryInfo)
-	systemOutput := systemFormatter.FormatSystemInfo(systemInfo)
+	batteryFormatter.SetBatteryInfo(batteryInfo)
+	batteryOutput := batteryFormatter.Format()
+	systemFormatter.SetSystemInfo(systemInfo)
+	systemOutput := systemFormatter.Format()
 
 	// 如果两个输出都为空，则不输出任何内容
 	if batteryOutput == "" && systemOutput == "" {

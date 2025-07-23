@@ -17,8 +17,8 @@ import (
 type Model struct {
 	batteryInfo  *battery.BatteryInfo
 	systemInfo   *system.SystemInfo
-	formatter    *display.Formatter
-	sysFormatter *display.SystemFormatter
+	formatter    display.Formatter
+	sysFormatter display.Formatter
 	config       *tmux.Config
 	err          error
 	quitting     bool
@@ -30,7 +30,7 @@ type tickMsg time.Time
 // NewModel 创建新的 TUI 模型
 func NewModel() *Model {
 	config := tmux.GetConfig()
-	batteryFormatter := display.NewFormatter(config)
+	batteryFormatter := display.NewBatteryFormatter(config)
 	systemFormatter := display.NewSystemFormatter(config)
 
 	return &Model{
@@ -116,7 +116,11 @@ func (m *Model) View() string {
 
 	// 电池信息
 	if m.batteryInfo != nil {
-		batteryDisplay := m.formatter.FormatBatteryWithStyle(m.batteryInfo)
+		// 设置电池信息并格式化
+		if bf, ok := m.formatter.(*display.BatteryFormatter); ok {
+			bf.SetBatteryInfo(m.batteryInfo)
+		}
+		batteryDisplay := m.formatter.FormatWithStyle()
 		content += "Battery Status: " + batteryDisplay + "\n\n"
 
 		// 详细信息
@@ -145,7 +149,11 @@ func (m *Model) View() string {
 
 	// 系统信息
 	if m.systemInfo != nil {
-		systemDisplay := m.sysFormatter.FormatSystemInfoWithStyle(m.systemInfo)
+		// 设置系统信息并格式化
+		if sf, ok := m.sysFormatter.(*display.SystemInfoFormatter); ok {
+			sf.SetSystemInfo(m.systemInfo)
+		}
+		systemDisplay := m.sysFormatter.FormatWithStyle()
 		if systemDisplay != "" {
 			content += "System Status: " + systemDisplay + "\n\n"
 
