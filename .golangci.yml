@@ -1,0 +1,28 @@
+linters:
+  enable:
+    - gofumpt
+    - gosimple
+    - gofmt
+    - unused
+    - errname
+    - gci
+    - gofmt
+
+linters-settings:
+  gosimple:
+    checks: ["all"]
+  gofmt: # 代码格式化设置
+    simplify: false
+    rewrite-rules:
+      - pattern: "interface{}" # 将 interface{} 替换为 any
+        replacement: "any"
+      - pattern: "a[b:len(a)]"
+        replacement: "a[b:]"
+  gci:
+    sections:
+      - standard
+      - default
+      - prefix(github.com/akayj/tmux-touchpad-battery)
+
+issues:
+  fix: true

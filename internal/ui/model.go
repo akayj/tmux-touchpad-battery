@@ -4,20 +4,24 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/akayj/tmux-touchpad-battery/internal/battery"
-	"github.com/akayj/tmux-touchpad-battery/internal/display"
-	"github.com/akayj/tmux-touchpad-battery/internal/tmux"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+
+	"github.com/akayj/tmux-touchpad-battery/internal/battery"
+	"github.com/akayj/tmux-touchpad-battery/internal/display"
+	"github.com/akayj/tmux-touchpad-battery/internal/system"
+	"github.com/akayj/tmux-touchpad-battery/internal/tmux"
 )
 
 // Model 表示 TUI 模型
 type Model struct {
-	batteryInfo *battery.BatteryInfo
-	formatter   *display.Formatter
-	config      *tmux.Config
-	err         error
-	quitting    bool
+	batteryInfo  *battery.BatteryInfo
+	systemInfo   *system.SystemInfo
+	formatter    *display.Formatter
+	sysFormatter *display.SystemFormatter
+	config       *tmux.Config
+	err          error
+	quitting     bool
 }
 
 // tickMsg 定时更新消息
@@ -26,11 +30,13 @@ type tickMsg time.Time
 // NewModel 创建新的 TUI 模型
 func NewModel() *Model {
 	config := tmux.GetConfig()
-	formatter := display.NewFormatter(config)
+	batteryFormatter := display.NewFormatter(config)
+	systemFormatter := display.NewSystemFormatter(config)
 
 	return &Model{
-		config:    config,
-		formatter: formatter,
+		config:       config,
+		formatter:    batteryFormatter,
+		sysFormatter: systemFormatter,
 	}
 }
 
@@ -38,6 +44,7 @@ func NewModel() *Model {
 func (m *Model) Init() tea.Cmd {
 	return tea.Batch(
 		m.updateBattery(),
+		m.updateSystemInfo(),
 		m.tick(),
 	)
 }
@@ -52,18 +59,26 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		case "r":
 			// 手动刷新
-			return m, m.updateBattery()
+			return m, tea.Batch(
+				m.updateBattery(),
+				m.updateSystemInfo(),
+			)
 		}
 
 	case tickMsg:
 		// 定时更新
 		return m, tea.Batch(
 			m.updateBattery(),
+			m.updateSystemInfo(),
 			m.tick(),
 		)
 
 	case *battery.BatteryInfo:
 		m.batteryInfo = msg
+		m.err = nil
+
+	case *system.SystemInfo:
+		m.systemInfo = msg
 		m.err = nil
 
 	case error:
@@ -102,7 +117,7 @@ func (m *Model) View() string {
 	// 电池信息
 	if m.batteryInfo != nil {
 		batteryDisplay := m.formatter.FormatBatteryWithStyle(m.batteryInfo)
-		content += "Current Status: " + batteryDisplay + "\n\n"
+		content += "Battery Status: " + batteryDisplay + "\n\n"
 
 		// 详细信息
 		if m.batteryInfo.Available {
@@ -126,6 +141,37 @@ func (m *Model) View() string {
 		content += lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#888888")).
 			Render("Loading battery information...") + "\n\n"
+	}
+
+	// 系统信息
+	if m.systemInfo != nil {
+		systemDisplay := m.sysFormatter.FormatSystemInfoWithStyle(m.systemInfo)
+		if systemDisplay != "" {
+			content += "System Status: " + systemDisplay + "\n\n"
+
+			// 详细信息
+			if m.systemInfo.Available {
+				detailStyle := lipgloss.NewStyle().
+					Foreground(lipgloss.Color("#888888"))
+
+				details := ""
+				details += detailStyle.Render("CPU Usage: ") +
+					lipgloss.NewStyle().Bold(true).Render(fmt.Sprintf("%.1f%%", m.systemInfo.CPUUsage)) + "\n"
+
+				gpuText := fmt.Sprintf("%.1f%%", m.systemInfo.GPUUsage)
+				if m.systemInfo.GPUUsage == 0 {
+					gpuText = "N/A"
+				}
+				details += detailStyle.Render("GPU Usage: ") +
+					lipgloss.NewStyle().Bold(true).Render(gpuText) + "\n"
+
+				content += details + "\n"
+			}
+		}
+	} else {
+		content += lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#888888")).
+			Render("Loading system information...") + "\n\n"
 	}
 
 	// 配置信息
@@ -154,6 +200,17 @@ func (m *Model) View() string {
 func (m *Model) updateBattery() tea.Cmd {
 	return func() tea.Msg {
 		info, err := battery.GetTouchpadBatteryInfo()
+		if err != nil {
+			return err
+		}
+		return info
+	}
+}
+
+// updateSystemInfo 更新系统信息
+func (m *Model) updateSystemInfo() tea.Cmd {
+	return func() tea.Msg {
+		info, err := system.GetSystemInfo()
 		if err != nil {
 			return err
 		}

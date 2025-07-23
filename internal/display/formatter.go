@@ -3,9 +3,10 @@ package display
 import (
 	"fmt"
 
+	"github.com/charmbracelet/lipgloss"
+
 	"github.com/akayj/tmux-touchpad-battery/internal/battery"
 	"github.com/akayj/tmux-touchpad-battery/internal/tmux"
-	"github.com/charmbracelet/lipgloss"
 )
 
 // Formatter 负责格式化电池显示

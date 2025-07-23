@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"os"
 
+	tea "github.com/charmbracelet/bubbletea"
+
 	"github.com/akayj/tmux-touchpad-battery/internal/battery"
 	"github.com/akayj/tmux-touchpad-battery/internal/display"
+	"github.com/akayj/tmux-touchpad-battery/internal/system"
 	"github.com/akayj/tmux-touchpad-battery/internal/tmux"
 	"github.com/akayj/tmux-touchpad-battery/internal/ui"
-	tea "github.com/charmbracelet/bubbletea"
 )
 
 func main() {
@@ -60,6 +62,10 @@ func printHelp() {
 	fmt.Println("  @tpb_blink_on_low_battery 低电量时闪烁 (默认: 'off')")
 	fmt.Println("  @tpb_charging_icon       充电图标 (默认: '⚡')")
 	fmt.Println("  @tpb_show_charging_icon  显示充电图标 (默认: 'on')")
+	fmt.Println("  @tpb_show_cpu_info       显示 CPU 信息 (默认: 'on')")
+	fmt.Println("  @tpb_show_gpu_info       显示 GPU 信息 (默认: 'on')")
+	fmt.Println("  @tpb_system_info_prefix  系统信息前缀 (默认: '')")
+	fmt.Println("  @tpb_system_info_suffix  系统信息后缀 (默认: '')")
 }
 
 func runUI() {
@@ -73,34 +79,77 @@ func runUI() {
 
 func showBatteryStatus() {
 	config := tmux.GetConfig()
-	formatter := display.NewFormatter(config)
+	batteryFormatter := display.NewFormatter(config)
+	systemFormatter := display.NewSystemFormatter(config)
 
-	info, err := battery.GetTouchpadBatteryInfo()
+	// 获取电池信息
+	batteryInfo, err := battery.GetTouchpadBatteryInfo()
 	if err != nil {
 		fmt.Printf("获取电池信息失败: %v\n", err)
 		os.Exit(1)
 	}
 
-	if !info.Available {
-		fmt.Println("触摸板未连接或无电池信息")
-		return
+	// 获取系统信息
+	systemInfo, err := system.GetSystemInfo()
+	if err != nil {
+		fmt.Printf("获取系统信息失败: %v\n", err)
+		os.Exit(1)
 	}
 
-	fmt.Printf("电池电量: %d%%\n", info.Percentage)
-	fmt.Printf("充电状态: %v\n", info.IsCharging)
-	fmt.Printf("格式化输出: %s\n", formatter.FormatBatteryWithStyle(info))
+	if batteryInfo.Available {
+		fmt.Printf("电池电量: %d%%\n", batteryInfo.Percentage)
+		fmt.Printf("充电状态: %v\n", batteryInfo.IsCharging)
+		fmt.Printf("电池格式化输出: %s\n", batteryFormatter.FormatBatteryWithStyle(batteryInfo))
+	}
+
+	if systemInfo.Available {
+		fmt.Printf("CPU 使用率: %.1f%%\n", systemInfo.CPUUsage)
+		fmt.Printf("GPU 使用率: %.1f%%\n", systemInfo.GPUUsage)
+		fmt.Printf("系统格式化输出: %s\n", systemFormatter.FormatSystemInfoWithStyle(systemInfo))
+	}
 }
 
 func outputTmuxFormat() {
 	config := tmux.GetConfig()
-	formatter := display.NewFormatter(config)
+	batteryFormatter := display.NewFormatter(config)
+	systemFormatter := display.NewSystemFormatter(config)
 
-	info, err := battery.GetTouchpadBatteryInfo()
+	// 获取电池信息
+	batteryInfo, err := battery.GetTouchpadBatteryInfo()
 	if err != nil {
 		// 静默失败，不输出任何内容
 		return
 	}
 
-	output := formatter.FormatBattery(info)
-	fmt.Print(output)
+	// 获取系统信息
+	systemInfo, err := system.GetSystemInfo()
+	if err != nil {
+		// 静默失败，不输出任何内容
+		return
+	}
+
+	// 格式化输出
+	batteryOutput := batteryFormatter.FormatBattery(batteryInfo)
+	systemOutput := systemFormatter.FormatSystemInfo(systemInfo)
+
+	// 如果两个输出都为空，则不输出任何内容
+	if batteryOutput == "" && systemOutput == "" {
+		return
+	}
+
+	// 输出结果，用空格分隔
+	var outputs []string
+	if batteryOutput != "" {
+		outputs = append(outputs, batteryOutput)
+	}
+	if systemOutput != "" {
+		outputs = append(outputs, systemOutput)
+	}
+
+	if len(outputs) > 0 {
+		fmt.Print(outputs[0])
+		for _, output := range outputs[1:] {
+			fmt.Print(" ", output)
+		}
+	}
 }

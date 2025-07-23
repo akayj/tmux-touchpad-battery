@@ -20,6 +20,12 @@ type Config struct {
 	BlinkOnLowBattery bool
 	ChargingIcon      string
 	ShowChargingIcon  bool
+
+	// 系统监控相关配置
+	ShowCPUInfo      bool
+	ShowGPUInfo      bool
+	SystemInfoPrefix string
+	SystemInfoSuffix string
 }
 
 // GetConfig 获取 tmux 配置
@@ -37,6 +43,12 @@ func GetConfig() *Config {
 		BlinkOnLowBattery: getTmuxOptionBool("@tpb_blink_on_low_battery", false),
 		ChargingIcon:      getTmuxOption("@tpb_charging_icon", "⚡"),
 		ShowChargingIcon:  getTmuxOptionBool("@tpb_show_charging_icon", true),
+
+		// 系统监控相关配置
+		ShowCPUInfo:      getTmuxOptionBool("@tpb_show_cpu_info", true),
+		ShowGPUInfo:      getTmuxOptionBool("@tpb_show_gpu_info", true),
+		SystemInfoPrefix: getTmuxOption("@tpb_system_info_prefix", ""),
+		SystemInfoSuffix: getTmuxOption("@tpb_system_info_suffix", ""),
 	}
 }
 
